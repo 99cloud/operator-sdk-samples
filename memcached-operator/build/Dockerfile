@@ -1,4 +1,8 @@
-FROM registry.access.redhat.com/ubi7-dev-preview/ubi-minimal:7.6
+FROM alpine:latest
+
+ARG REPO_URL
+ARG BRANCH
+ARG COMMIT_REF
 
 ENV OPERATOR=/usr/local/bin/memcached-operator \
     USER_UID=1001 \

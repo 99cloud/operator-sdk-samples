@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/operator-framework/operator-sdk-samples/memcached-operator/pkg/apis/cache/v1alpha1"
+	"github.com/example-inc/memcached-operator/pkg/apis/cache/v1alpha1"
 )
 
 func init() {

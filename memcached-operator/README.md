@@ -1,75 +1,86 @@
-# Memcached Ansible Operator
-
-## Overview
-
-This Memcached operator is a simple example operator for the [Operator SDK][operator_sdk] and includes some basic end-to-end tests.
+# Memcached Operator
 
 ## Prerequisites
 
-- [dep][dep_tool] version v0.5.0+.
-- [go][go_tool] version v1.12+.
-- [docker][docker_tool] version 17.03+
-- [kubectl][kubectl_tool] v1.11.3+
-- [operator-sdk][operator_install]
-- Access to a Kubernetes v1.11.3+ cluster
+- git
+- go version v1.12+
+- docker version 1.13.1+
 
-## Getting Started
+## Build and run the Operator
 
-### Cloning the repository
+> Before running the operator, The CRD must be register with apiserver
 
-Checkout this Memcached Operator repository
+    oc create -f deploy/crds/cache.example.com_memcacheds_crd.yaml
+1. Clone repo and build image
 
-```
-$ mkdir $GOPATH/src/github.com/operator-framework
-$ cd $GOPATH/src/github.com/operator-framework
-$ git clone https://github.com/operator-framework/operator-sdk-samples.git
-$ cd operator-sdk-samples/memcached-operator
-```
-### Pulling the dependencies
+        $ git clone https://github.com/99cloud/operator-sdk-samples.git
+        $ git checkout animbus-3.11
+        $ cd operator-sdk-samples/memcached-operator
+        $ make install
+        $ make image
+1. Run as Deployment inside the cluster
 
-Run the following command
+        $ oc create -f deploy/service_account.yaml
+        $ oc create -f deploy/cluster_role.yaml
+        $ oc create -f deploy/cluster_role_binding.yaml
+    **Note**: To apply the RBAC you need to logged in `system:admin`
+1. Verify that the `memcached-operator` Deployment is up and runing
 
-```
-$ go mod tidy
-```
+        oc get deployment memcached-operator
+        NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+        memcached-operator   1         1         1            1           4h
+1. Verify that the `memcached-operator` pod is up and running:
 
-### Building the operator
+        oc get pod -l name=memcached-operator
+        NAME                                  READY     STATUS    RESTARTS   AGE
+        memcached-operator-8646699d79-6pnz2   1/1       Running   0          2h
 
-Build the Memcached operator image and push it to a public registry, such as quay.io:
+## Create a Memcached CR
 
-```
-$ export IMAGE=quay.io/example-inc/memcached-operator:v0.0.1
-$ operator-sdk build $IMAGE
-$ docker push $IMAGE
-```
+1. Create the example Memcached CR that was generated at `deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml`:
 
-### Using the image
+        $ cat deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
+        apiVersion: cache.example.com/v1alpha1
+        kind: Memcached
+        metadata:
+          name: example-memcached
+        spec:
+          # Add fields here
+          size: 3
+          image: memcached:1.4.36-alpine
 
-```
-# Update the operator manifest to use the built image name (if you are performing these steps on OSX, see note below)
-$ sed -i 's|REPLACE_IMAGE|quay.io/example-inc/memcached-operator|g' deploy/operator.yaml
-# On OSX use:
-$ sed -i "" 's|REPLACE_IMAGE|quay.io/example-inc/memcached-operator|g' deploy/operator.yaml
-```
+        $ oc apply -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
+1. Ensure that the memcached-operator creates the deployment for the CR
 
-**NOTE** The `quay.io/example-inc/memcached-operator` is an example. You should build and push the image for your repository.
+        $ oc get deployment
+        NAME                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+        memcached-operator       1         1         1            1           2m
+        example-memcached        3         3         3            3           1m
+1. Check the pods and CR status to confirm the status is updated with the memcached pod names:
 
-### Installing
+        $ oc get pods
+        NAME                                  READY     STATUS    RESTARTS   AGE
+        example-memcached-6fd7c98d8-7dqdr     1/1       Running   0          1m
+        example-memcached-6fd7c98d8-g5k7v     1/1       Running   0          1m
+        example-memcached-6fd7c98d8-m7vn7     1/1       Running   0          1m
+        memcached-operator-7cc7cfdf86-vvjqk   1/1       Running   0          2m
 
-Run `make install` to install the operator. Check that the operator is running in the cluster, also check that the example Memcached service was deployed.
-
-### Uninstalling
-
-To uninstall all that was performed in the above step run `make uninstall`.
-
-### Run Tests
-
-Run `make test-e2e` to run the integration e2e tests with different options. For
-more information see the [writing e2e tests](https://github.com/operator-framework/operator-sdk/blob/master/doc/test-framework/writing-e2e-tests.md) guide.
-
-[dep_tool]: https://golang.github.io/dep/docs/installation.html
-[go_tool]: https://golang.org/dl/
-[kubectl_tool]: https://kubernetes.io/docs/tasks/tools/install-kubectl/
-[docker_tool]: https://docs.docker.com/install/
-[operator_sdk]: https://github.com/operator-framework/operator-sdk
-[operator_install]: https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md
+        $ oc get memcached example-memcached -o yaml
+        apiVersion: cache.example.com/v1alpha1
+        kind: Memcached
+        metadata:
+          creationTimestamp: 2019-11-06T02:38:35Z
+          generation: 1
+          name: example-memcached
+          namespace: "123"
+          resourceVersion: "8303746"
+          selfLink: /apis/cache.example.com/v1alpha1/namespaces/123/memcacheds/example-memcached
+          uid: 88081d77-003e-11ea-b754-00163e10e25b
+        spec:
+          image: memcached:1.4.36-alpine
+          size: 3
+        status:
+          nodes:
+          - example-memcached-75cf67cd7b-45tf4
+          - example-memcached-75cf67cd7b-7z6sh
+          - example-memcached-75cf67cd7b-ppxx7
