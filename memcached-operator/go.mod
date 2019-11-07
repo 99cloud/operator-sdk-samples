@@ -1,7 +1,6 @@
-module github.com/operator-framework/operator-sdk-samples/memcached-operator
+module github.com/99cloud/operator-sdk-samples/memcached-operator
 
 require (
-	github.com/NYTimes/gziphandler v1.0.1 // indirect
 	github.com/go-openapi/spec v0.19.0
 	github.com/operator-framework/operator-sdk v0.10.1-0.20190906161029-1cb0481ca946
 	github.com/spf13/pflag v1.0.3
@@ -32,3 +31,5 @@ replace (
 )
 
 replace github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.10.0
+
+go 1.13

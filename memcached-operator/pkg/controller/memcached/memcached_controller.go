@@ -4,7 +4,7 @@ import (
 	"context"
 	"reflect"
 
-	cachev1alpha1 "github.com/operator-framework/operator-sdk-samples/memcached-operator/pkg/apis/cache/v1alpha1"
+	cachev1alpha1 "github.com/99cloud/operator-sdk-samples/memcached-operator/pkg/apis/cache/v1alpha1"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -141,6 +141,17 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 		}
 	}
 
+	// Ensure the deployment image is the same as spec
+	image := memcached.Spec.Image
+	if deployment.Spec.Template.Spec.Containers[0].Image != image {
+		deployment.Spec.Template.Spec.Containers[0].Image = image
+		err = r.client.Update(context.TODO(), deployment)
+		if err != nil {
+			reqLogger.Error(err, "Failed to update Deployment.", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
+			return reconcile.Result{}, err
+		}
+	}
+
 	// Check if the Service already exists, if not create a new one
 	// NOTE: The Service is used to expose the Deployment. However, the Service is not required at all for the memcached example to work. The purpose is to add more examples of what you can do in your operator project.
 	service := &corev1.Service{}
@@ -161,6 +172,7 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 
 	// Update the Memcached status with the pod names
 	// List the pods for this memcached's deployment
+	// update the memcached status with the pod name
 	podList := &corev1.PodList{}
 	labelSelector := labels.SelectorFromSet(labelsForMemcached(memcached.Name))
 	listOps := &client.ListOptions{
@@ -208,12 +220,12 @@ func (r *ReconcileMemcached) deploymentForMemcached(m *cachev1alpha1.Memcached) 
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-						Image:   "memcached:1.4.36-alpine",
-						Name:    "memcached",
+						Image:   m.Spec.Image,
+						Name:    m.Name,
 						Command: []string{"memcached", "-m=64", "-o", "modern", "-v"},
 						Ports: []corev1.ContainerPort{{
 							ContainerPort: 11211,
-							Name:          "memcached",
+							Name:          m.Name,
 						}},
 					}},
 				},

@@ -33,8 +33,13 @@ spec:
               description: Quantity of instances
               format: int32
               type: integer
+            image:
+              description: Image of pods
+              format: string
+              type: string
           required:
           - size
+          - image
           type: object
         status:
           properties:

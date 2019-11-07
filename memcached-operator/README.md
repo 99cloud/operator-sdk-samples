@@ -8,10 +8,10 @@ This Memcached operator is a simple example operator for the [Operator SDK][oper
 
 - [dep][dep_tool] version v0.5.0+.
 - [go][go_tool] version v1.12+.
-- [docker][docker_tool] version 17.03+
-- [kubectl][kubectl_tool] v1.11.3+
+- [docker][docker_tool] version 1.13.1+
+- [kubectl][kubectl_tool] v1.11+
 - [operator-sdk][operator_install]
-- Access to a Kubernetes v1.11.3+ cluster
+- Access to a Kubernetes v1.11+ cluster
 
 ## Getting Started
 
@@ -20,10 +20,11 @@ This Memcached operator is a simple example operator for the [Operator SDK][oper
 Checkout this Memcached Operator repository
 
 ```
-$ mkdir $GOPATH/src/github.com/operator-framework
-$ cd $GOPATH/src/github.com/operator-framework
-$ git clone https://github.com/operator-framework/operator-sdk-samples.git
+$ mkdir $GOPATH/src/github.com/99cloud
+$ cd $GOPATH/src/github.com/99cloud
+$ git clone https://github.com/99cloud/operator-sdk-samples.git
 $ cd operator-sdk-samples/memcached-operator
+$ git checkout animbus-v3.11
 ```
 ### Pulling the dependencies
 
