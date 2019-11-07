@@ -1,3 +1,5 @@
 .idea/*
 helm/memcached-operator/.idea/*
 ansible/memcached-operator/.idea/*
+.DS_Store 
+*/.DS_Store 
